@@ -4,7 +4,7 @@ namespace WPThemeModsAPI;
 /**
  * Plugin Name:       WP ThemeMods API
  * Description:       Allow theme mods editing via REST API.
- * Version:           0.0.1
+ * Version:           0.0.2
  * Author:            ThemeIsle
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
@@ -38,6 +38,22 @@ class Bootstrap {
 
 			},
 			'callback'            => [ $this, 'set_mods' ],
+		) );
+
+		register_rest_route( 'wpthememods/v1', '/settings', array(
+			'methods'             => 'GET',
+			'permission_callback' => function ( \WP_REST_Request $request ) {
+				//If secret is not defined, we always allow access.
+				if ( ! defined( WPTHEMEMODS_SECRET ) ) {
+					return true;
+				}
+				$token = $request->get_header( 'Authorization' );
+				$token = \trim( (string) \preg_replace( '/^(?:\s+)?Bearer\s/', '', $token ) );
+
+				return $token === WPTHEMEMODS_SECRET;
+
+			},
+			'callback'            => [ $this, 'get_mods' ],
 		) );
 	}
 
@@ -74,6 +90,23 @@ class Bootstrap {
 		update_option( "theme_mods_$theme_slug", $mods_to_set );
 
 		return new \WP_REST_Response( $mods_to_set );
+	}
+
+	/**
+	 * Define the API callback for get request.
+	 *
+	 * @param \WP_REST_Request $request
+	 *
+	 * @return \WP_Error|\WP_REST_Response
+	 */
+	public function get_mods( \WP_REST_Request $request ) {
+		$body = $request->get_json_params();
+		if ( is_string( $body ) ) {
+			return new \WP_Error( 'invalid', 'Invalid data provided' );
+		}
+		$mods = get_theme_mods();
+
+		return new \WP_REST_Response( $mods );
 	}
 
 }
