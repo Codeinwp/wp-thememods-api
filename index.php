@@ -26,35 +26,33 @@ class Bootstrap {
 
 		register_rest_route( 'wpthememods/v1', '/settings', array(
 			'methods'             => 'POST',
-			'permission_callback' => function ( \WP_REST_Request $request ) {
-				//If secret is not defined, we always allow access.
-				if ( ! defined( WPTHEMEMODS_SECRET ) ) {
-					return true;
-				}
-				$token = $request->get_header( 'Authorization' );
-				$token = \trim( (string) \preg_replace( '/^(?:\s+)?Bearer\s/', '', $token ) );
-
-				return $token === WPTHEMEMODS_SECRET;
-
-			},
+			'permission_callback' => [ $this, 'is_allowed' ],
 			'callback'            => [ $this, 'set_mods' ],
 		) );
 
 		register_rest_route( 'wpthememods/v1', '/settings', array(
 			'methods'             => 'GET',
-			'permission_callback' => function ( \WP_REST_Request $request ) {
-				//If secret is not defined, we always allow access.
-				if ( ! defined( WPTHEMEMODS_SECRET ) ) {
-					return true;
-				}
-				$token = $request->get_header( 'Authorization' );
-				$token = \trim( (string) \preg_replace( '/^(?:\s+)?Bearer\s/', '', $token ) );
-
-				return $token === WPTHEMEMODS_SECRET;
-
-			},
+			'permission_callback' => [ $this, 'is_allowed' ],
 			'callback'            => [ $this, 'get_mods' ],
 		) );
+	}
+
+	/**
+	 * Check if the request is allowed.
+	 *
+	 * @param \WP_REST_Request $request
+	 *
+	 * @return bool
+	 */
+	public function is_allowed( \WP_REST_Request $request ) {
+		//If secret is not defined, we always allow access.
+		if ( ! defined( WPTHEMEMODS_SECRET ) ) {
+			return true;
+		}
+		$token = $request->get_header( 'Authorization' );
+		$token = \trim( (string) \preg_replace( '/^(?:\s+)?Bearer\s/', '', $token ) );
+
+		return $token === WPTHEMEMODS_SECRET;
 	}
 
 	/**
@@ -100,10 +98,6 @@ class Bootstrap {
 	 * @return \WP_Error|\WP_REST_Response
 	 */
 	public function get_mods( \WP_REST_Request $request ) {
-		$body = $request->get_json_params();
-		if ( is_string( $body ) ) {
-			return new \WP_Error( 'invalid', 'Invalid data provided' );
-		}
 		$mods = get_theme_mods();
 
 		return new \WP_REST_Response( $mods );
