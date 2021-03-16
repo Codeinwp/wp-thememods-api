@@ -4,7 +4,7 @@ namespace WPThemeModsAPI;
 /**
  * Plugin Name:       WP ThemeMods API
  * Description:       Allow theme mods editing via REST API.
- * Version:           0.0.3
+ * Version:           0.0.4
  * Author:            Themeisle
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
@@ -103,6 +103,27 @@ class Bootstrap {
 		return new \WP_REST_Response( $mods );
 	}
 
+  /**
+   * Adds to JWT whitelist
+   * 
+   * @param $custom_urls
+   * @param $request_method
+   * 
+   * @return $custom_urls
+   */
+  public function api_bearer_auth_unauthenticated_urls_filter($custom_urls, $request_method) {
+    switch ($request_method) {
+      case 'POST':
+        $custom_urls[] = '/wp-json/wpthememods/v1/settings';
+        break;
+      case 'GET':
+        $custom_urls[] = '/wp-json/wpthememods/v1/settings';
+        break;
+    }
+    return $custom_urls;
+  }
 }
 
 add_action( 'plugins_loaded', [ ( new Bootstrap() ), 'init' ] );
+
+add_filter('api_bearer_auth_unauthenticated_urls', array( ( new Bootstrap() ) , 'api_bearer_auth_unauthenticated_urls_filter' ), 10, 2);
