@@ -4,7 +4,7 @@ namespace WPThemeModsAPI;
 /**
  * Plugin Name:       WP ThemeMods API
  * Description:       Allow theme mods editing via REST API.
- * Version:           0.0.4
+ * Version:           0.0.5
  * Author:            Themeisle
  * License:           GPL v2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
@@ -81,6 +81,19 @@ class Bootstrap {
 			if ( isset( self::DISALLOWED_KEYS[ $key ] ) ) {
 				continue;
 			}
+
+			if ( $key === 'neve_header_conditional_selector' ) {
+				$response = $this->handle_conditional_headers( $value );
+
+				if ( ! is_array( $response ) || ! empty( $response ) ) {
+					return new \WP_Error( 'invalid', 'Conditional headers could not be set up' );
+				}
+
+				$mods_to_set['neve_global_header'] = false;
+
+				continue;
+			}
+
 			$mods_to_set[ $key ] = $value;
 		}
 
@@ -105,10 +118,10 @@ class Bootstrap {
 
   /**
    * Adds to JWT whitelist
-   * 
+   *
    * @param $custom_urls
    * @param $request_method
-   * 
+   *
    * @return $custom_urls
    */
   public function api_bearer_auth_unauthenticated_urls_filter($custom_urls, $request_method) {
@@ -122,6 +135,34 @@ class Bootstrap {
     }
     return $custom_urls;
   }
+
+	/**
+	 * Handle the conditional headers theme mod.
+	 *
+	 * @param array $value value for conditional headers.
+	 * @return array|\WP_Error
+	 */
+	public function handle_conditional_headers( $value ) {
+		if ( ! class_exists( '\Neve_Pro\Modules\Header_Footer_Grid\Customizer\Conditional_Headers' ) ) {
+			return new \WP_Error( 'invalid', 'Neve Pro should be installed for this to work.' );
+		}
+
+		$value['add'] = [];
+		foreach ( array_keys( $value['headers'] ) as $header_slug ) {
+			if ( $header_slug === 'default' ) {
+				continue;
+			}
+
+			$value['add'][ $header_slug ] = $value['headers'][ $header_slug ]['label'];
+		}
+
+		$handler = new \Neve_Pro\Modules\Header_Footer_Grid\Customizer\Conditional_Headers();
+
+		$to_send = [ 'neve::neve_header_conditional_selector' => [ 'value' => $value ] ];
+		$context = [ 'status' => 'publish' ];
+
+		return $handler->conditional_headers_filtering( $to_send, $context );
+	}
 }
 
 add_action( 'plugins_loaded', [ ( new Bootstrap() ), 'init' ] );
