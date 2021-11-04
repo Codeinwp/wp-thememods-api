@@ -46,7 +46,7 @@ class Bootstrap {
 	 */
 	public function is_allowed( \WP_REST_Request $request ) {
 		//If secret is not defined, we always allow access.
-		if ( ! defined( WPTHEMEMODS_SECRET ) ) {
+		if ( ! defined( 'WPTHEMEMODS_SECRET' ) ) {
 			return true;
 		}
 		$token = $request->get_header( 'Authorization' );
@@ -85,8 +85,8 @@ class Bootstrap {
 			if ( $key === 'neve_header_conditional_selector' ) {
 				$response = $this->handle_conditional_headers( $value );
 
-				if ( ! is_array( $response ) || ! empty( $response ) ) {
-					return new \WP_Error( 'invalid', 'Conditional headers could not be set up' );
+				if ( is_wp_error( $response ) ) {
+					return $response;
 				}
 
 				$mods_to_set['neve_global_header'] = false;
@@ -157,6 +157,7 @@ class Bootstrap {
 		}
 
 		$handler = new \Neve_Pro\Modules\Header_Footer_Grid\Customizer\Conditional_Headers();
+		$handler->init();
 
 		$to_send = [ 'neve::neve_header_conditional_selector' => [ 'value' => $value ] ];
 		$context = [ 'status' => 'publish' ];
