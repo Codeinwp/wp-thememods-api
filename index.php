@@ -46,7 +46,7 @@ class Bootstrap {
 	 */
 	public function is_allowed( \WP_REST_Request $request ) {
 		//If secret is not defined, we always allow access.
-		if ( ! defined( 'WPTHEMEMODS_SECRET' ) ) {
+		if ( ! defined( WPTHEMEMODS_SECRET ) ) {
 			return true;
 		}
 		$token = $request->get_header( 'Authorization' );
