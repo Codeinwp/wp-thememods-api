@@ -20,11 +20,25 @@ class Bootstrap {
 
 		add_action( 'rest_api_init', [ $this, 'register_route' ] );
 
+        $test_name = $_GET['test_name'] ?? '';
+        if ( ! empty( $test_name ) ) {
+            $theme_mods = get_option( $test_name . '_theme_mods' );
+            if ( ! empty( $theme_mods ) ) {
+                foreach ( $theme_mods as $key => $value ){
+                    add_filter( 'theme_mod_'.$key, function ( $value ) use ( $key, $test_name ) {
+                        if ( 'not-exists' === get_option( $test_name . '_' . $key, 'not-exists' ) ) {
+                            return $value;
+                        }
+                        return get_option( $test_name . '_' . $key );
+                    });
+                }
+            }
+        }
 	}
 
 	public function register_route() {
 
-		register_rest_route( 'wpthememods/v1', '/settings', array(
+		register_rest_route( 'wpthememods/v1', '/settings/(?P<test_name>[a-zA-Z0-9-]+)', array(
 			'methods'             => 'POST',
 			'permission_callback' => [ $this, 'is_allowed' ],
 			'callback'            => [ $this, 'set_mods' ],
@@ -63,10 +77,12 @@ class Bootstrap {
 	 * @return \WP_Error|\WP_REST_Response
 	 */
 	public function set_mods( \WP_REST_Request $request ) {
+
 		$body = $request->get_json_params();
 		if ( is_string( $body ) ) {
 			return new \WP_Error( 'invalid', 'Invalid data provided' );
 		}
+        $test_name = $request->get_param( 'test_name' );
 		$mods = get_theme_mods();
 
 		$mods_to_set = [];
@@ -97,8 +113,10 @@ class Bootstrap {
 			$mods_to_set[ $key ] = $value;
 		}
 
-		$theme_slug = get_option( 'stylesheet' );
-		update_option( "theme_mods_$theme_slug", $mods_to_set );
+        update_option( $test_name . '_theme_mods', $mods_to_set);
+        foreach ( $mods_to_set as $key => $value ){
+            update_option( $test_name . '_' . $key, $value );
+        }
 
 		return new \WP_REST_Response( $mods_to_set );
 	}
