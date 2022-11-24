@@ -29,6 +29,9 @@ class Bootstrap {
                         if ( 'not-exists' === get_option( $test_name . '_' . $key, 'not-exists' ) ) {
                             return $value;
                         }
+                        if ( $key === 'neve_blog_list_alternative_layout' ) {
+                            return (bool) get_option( $test_name . '_' . $key );
+                        }
                         return get_option( $test_name . '_' . $key );
                     });
                 }
