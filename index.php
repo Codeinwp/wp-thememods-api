@@ -24,14 +24,17 @@ class Bootstrap {
         if ( ! empty( $test_name ) ) {
             $theme_mods = get_option( $test_name . '_theme_mods' );
             if ( ! empty( $theme_mods ) ) {
+                $bool_theme_mods = [ 'neve_advanced_layout_options', 'neve_blog_list_alternative_layout'];
                 foreach ( $theme_mods as $key => $value ){
-                    add_filter( 'theme_mod_'.$key, function ( $value ) use ( $key, $test_name ) {
+                    add_filter( 'theme_mod_'.$key, function ( $value ) use ( $key, $test_name, $bool_theme_mods ) {
                         if ( 'not-exists' === get_option( $test_name . '_' . $key, 'not-exists' ) ) {
                             return $value;
                         }
-                        if ( $key === 'neve_blog_list_alternative_layout' ) {
+
+                        if ( in_array( $key, $bool_theme_mods, true ) ){
                             return (bool) get_option( $test_name . '_' . $key );
                         }
+
                         return get_option( $test_name . '_' . $key );
                     });
                 }
