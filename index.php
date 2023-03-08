@@ -57,13 +57,14 @@ class Bootstrap {
 
 		foreach ( $theme_mods as $key => $value ){
 
-			// Run through options and filter them.
+			// Check if a key is actually an option and not a theme mod.
 			if ( $key === 'options' ) {
 				foreach ( $value as $option_key => $option_value ) {
 					add_filter( 'option_' . $option_key, function () use ( $option_value ) {
 						return $option_value;
 					});
 				}
+
 				continue;
 			}
 
@@ -156,6 +157,12 @@ class Bootstrap {
 				$mods_to_set['neve_global_header'] = false;
 
 				continue;
+			}
+
+			if ( $key === 'options' ) {
+				foreach ( $value as $option_key => $option_value ) {
+					$mods_to_set['options'][ $option_key ] = $option_value;
+				}
 			}
 
 			$mods_to_set[ $key ] = $value;
