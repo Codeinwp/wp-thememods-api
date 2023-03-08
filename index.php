@@ -22,22 +22,21 @@ class Bootstrap {
 	public function init() {
 
 		add_action( 'rest_api_init', [ $this, 'register_route' ] );
-		add_action( 'init', [ $this, 'update_empty_option' ] );
+		$this->update_empty_option();
 		$this->filter_theme_mods();
 	}
 
 	/**
 	 * This method is required because you can't filter an option that doesn't exist.
 	 */
-	public function update_empty_option() {
+	private function update_empty_option() {
 		if ( get_option( 'thememods_api_updated_option', 'no' ) === 'yes' ) {
 			return;
 		}
-
 		update_option( 'woocommerce_shop_page_display', '' );
 		update_option( 'thememods_api_updated_option', 'yes' );
 	}
-	
+
 	/**
 	 * Filter theme mods.
 	 */
@@ -58,12 +57,13 @@ class Bootstrap {
 
 		foreach ( $theme_mods as $key => $value ){
 
-			// Check if a key is actually an option and not a theme mod.
-			$option_value = get_option( $key, 'not-exists' );
-			if ( 'not-exists' !== $option_value ) {
-				add_filter( 'option_' . $key, function () use ( $key, $test_name ) {
-					return get_option( $test_name . '_' . $key );
-				});
+			// Run through options and filter them.
+			if ( $key === 'options' ) {
+				foreach ( $value as $option_key => $option_value ) {
+					add_filter( 'option_' . $option_key, function () use ( $option_value ) {
+						return $option_value;
+					});
+				}
 				continue;
 			}
 
