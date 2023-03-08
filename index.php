@@ -10,38 +10,67 @@ namespace WPThemeModsAPI;
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  */
 class Bootstrap {
-	const        DISALLOWED_KEYS = [
+	const DISALLOWED_KEYS = [
 		'sidebars_widgets'   => true,
 		'custom_css_post_id' => true,
 		'nav_menu_locations' => true,
 	];
 
+	/**
+	 * Bootstrap init function.
+	 */
 	public function init() {
 
 		add_action( 'rest_api_init', [ $this, 'register_route' ] );
-
-        $test_name = $_GET['test_name'] ?? '';
-        if ( ! empty( $test_name ) ) {
-            $theme_mods = get_option( $test_name . '_theme_mods' );
-            if ( ! empty( $theme_mods ) ) {
-                $bool_theme_mods = [ 'neve_advanced_layout_options', 'neve_blog_list_alternative_layout', 'neve_enable_card_style', 'neve_blog_separator', 'neve_global_header', 'neve_enable_payment_icons', 'neve_enable_product_breadcrumbs', 'neve_enable_product_navigation', 'neve_enable_cart_upsells', 'neve_checkout_boxed_layout', 'neve_enable_seamless_add_to_cart', 'neve_ran_migrations', 'neve_migrated_hfg_colors' ];
-                foreach ( $theme_mods as $key => $value ){
-                    add_filter( 'theme_mod_'.$key, function ( $value ) use ( $key, $test_name, $bool_theme_mods ) {
-                        if ( 'not-exists' === get_option( $test_name . '_' . $key, 'not-exists' ) ) {
-                            return $value;
-                        }
-
-                        if ( in_array( $key, $bool_theme_mods, true ) ){
-                            return (bool) get_option( $test_name . '_' . $key );
-                        }
-
-                        return get_option( $test_name . '_' . $key );
-                    });
-                }
-            }
-        }
+		$this->filter_theme_mods();
 	}
 
+	/**
+	 * Filter theme mods.
+	 */
+	private function filter_theme_mods() {
+		if ( ! isset( $_GET['test_name'] ) ) {
+			return;
+		}
+
+		$test_name  = $_GET['test_name'];
+		$theme_mods = get_option( $test_name . '_theme_mods' );
+
+		if ( empty( $theme_mods ) ) {
+			return;
+		}
+
+		// For some theme mods we need to cast the value to boolean.
+		$bool_theme_mods = [ 'neve_advanced_layout_options', 'neve_blog_list_alternative_layout', 'neve_enable_card_style', 'neve_blog_separator', 'neve_global_header', 'neve_enable_payment_icons', 'neve_enable_product_breadcrumbs', 'neve_enable_product_navigation', 'neve_enable_cart_upsells', 'neve_checkout_boxed_layout', 'neve_enable_seamless_add_to_cart', 'neve_ran_migrations', 'neve_migrated_hfg_colors' ];
+
+		foreach ( $theme_mods as $key => $value ){
+
+			// Check if a key is actually an option and not a theme mod.
+			$option_value = get_option( $key, 'not-exists' );
+			if ( 'not-exists' !== $option_value ) {
+				add_filter( 'option_' . $key, function () use ( $key, $test_name ) {
+					return get_option( $test_name . '_' . $key );
+				});
+				continue;
+			}
+
+			add_filter( 'theme_mod_'.$key, function ( $value ) use ( $key, $test_name, $bool_theme_mods ) {
+				if ( 'not-exists' === get_option( $test_name . '_' . $key, 'not-exists' ) ) {
+					return $value;
+				}
+
+				if ( in_array( $key, $bool_theme_mods, true ) ){
+					return (bool) get_option( $test_name . '_' . $key );
+				}
+
+				return get_option( $test_name . '_' . $key );
+			});
+		}
+	}
+
+	/**
+	 * Define the API callback for get.
+	 */
 	public function register_route() {
 
 		register_rest_route( 'wpthememods/v1', '/settings/(?P<test_name>[a-zA-Z0-9-]+)', array(
