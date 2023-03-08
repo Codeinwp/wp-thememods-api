@@ -22,9 +22,22 @@ class Bootstrap {
 	public function init() {
 
 		add_action( 'rest_api_init', [ $this, 'register_route' ] );
+		add_action( 'init', [ $this, 'update_empty_option' ] );
 		$this->filter_theme_mods();
 	}
 
+	/**
+	 * This method is required because you can't filter an option that doesn't exist.
+	 */
+	public function update_empty_option() {
+		if ( get_option( 'thememods_api_updated_option', 'no' ) === 'yes' ) {
+			return;
+		}
+
+		update_option( 'woocommerce_shop_page_display', '' );
+		update_option( 'thememods_api_updated_option', 'yes' );
+	}
+	
 	/**
 	 * Filter theme mods.
 	 */
