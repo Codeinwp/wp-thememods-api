@@ -65,7 +65,7 @@ class Bootstrap {
 							return $option_value;
 						});
 					}
-				}
+				});
 
 				continue;
 			}
