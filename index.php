@@ -59,13 +59,11 @@ class Bootstrap {
 
 			// Check if a key is actually an option and not a theme mod.
 			if ( $key === 'options' ) {
-				add_action( 'init', function() use ($value) {
-					foreach ( $value as $option_key => $option_value ) {
-						add_filter( 'option_' . $option_key, function () use ( $option_value ) {
-							return $option_value;
-						});
-					}
-				});
+				foreach ( $value as $option_key => $option_value ) {
+					add_filter( 'option_' . $option_key, function () use ( $option_value ) {
+						return $option_value;
+					});
+				}
 
 				continue;
 			}
