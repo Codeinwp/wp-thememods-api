@@ -62,7 +62,7 @@ class Bootstrap {
 		}
 
 		// For some theme mods we need to cast the value to boolean.
-		$bool_theme_mods = [ 'neve_advanced_layout_options', 'neve_blog_list_alternative_layout', 'neve_enable_card_style', 'neve_blog_separator', 'neve_global_header', 'neve_enable_payment_icons', 'neve_enable_product_breadcrumbs', 'neve_enable_product_navigation', 'neve_enable_cart_upsells', 'neve_checkout_boxed_layout', 'neve_enable_seamless_add_to_cart', 'neve_ran_migrations', 'neve_migrated_hfg_colors' ];
+		$bool_theme_mods = [ 'neve_advanced_layout_options', 'neve_blog_list_alternative_layout', 'neve_enable_card_style', 'neve_blog_separator', 'neve_global_header', 'neve_enable_payment_icons', 'neve_enable_product_breadcrumbs', 'neve_enable_product_navigation', 'neve_enable_cart_upsells', 'neve_checkout_boxed_layout', 'neve_enable_seamless_add_to_cart', 'neve_ran_migrations', 'neve_migrated_hfg_colors', 'advanced_search_form_1_exclude_sticky' ];
 
 		foreach ( $theme_mods as $key => $value ){
 
